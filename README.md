@@ -8,11 +8,14 @@
 
 ## 运行说明
 
-```text
+### GUI
 
-1. 使用NCM2MP3.jar运行图形界面(只需要准备jdk环境便可以):命令行中在该jar包的目录下执行`java -jar NCM2MP3.jar`
-2. 用源代码运行:在环境配置好后,执行入口为`main.java`
-3. 命令行相关操作`java -jar NCM2MP3.jar [command]`
+Win/Linux直接运行 `./mvnw.cmd compile exec:java`
+
+### 命令行
+
+```
+java -jar NCM2MP3.jar [command]
 Usage: java -jar NCM2MP3.jar [command]
 If don't add command, there will open NCM2MP3 GUI directly
 [Command List]
@@ -61,15 +64,15 @@ If don't add command, there will open NCM2MP3 GUI directly
 ## 效果
 - 打开界面
 
-![](https://github.com/charlotte-xiao/NCM2MP3/blob/master/image/picture1.png)
+![](./image/picture1.png)
 
 - 准备转换
 
-![](https://github.com/charlotte-xiao/NCM2MP3/blob/master/image/picture2.png)
+![](./image/picture2.png)
 
 - 转换成功
 
-![](https://github.com/charlotte-xiao/NCM2MP3/blob/master/image/picture3.png)
+![](./image/picture3.png)
 
 ## 更多
 - 密码学.md:关于密码学相关知识不懂的可以查看该文档
