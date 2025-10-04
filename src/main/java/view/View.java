@@ -14,6 +14,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -40,14 +43,17 @@ public class View extends JFrame {
                 Utils.listAllFiles(arrayList, file);
             }
             for (File file : arrayList) {
-                ((DefaultTableModel) table.getModel()).addRow(new String[]{file.getName(), file.getAbsolutePath(), String.valueOf(file.length()), "准备转换"});
+                String filePath = file.getAbsolutePath();
+                if (!isFileAlreadyInTable(filePath)) {
+                    ((DefaultTableModel) table.getModel()).addRow(new String[]{file.getName(), filePath, String.valueOf(file.length()), "准备转换"});
+                }
             }
         }
     }
 
     private void button2MouseClicked(MouseEvent e) {
         int returnVal = jFileChooser2.showOpenDialog(panel);
-        List<Future<Boolean>> tasks = new ArrayList();
+        List<Future<Boolean>> tasks = new ArrayList<>();
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = jFileChooser2.getSelectedFile();
             String outFilePath = file.getAbsolutePath();
@@ -69,6 +75,78 @@ public class View extends JFrame {
         for (int i = 1; i <= rowCount; i++) {
             ((DefaultTableModel) table.getModel()).removeRow(rowCount - i);
         }
+    }
+
+    private boolean isFileAlreadyInTable(String filePath) {
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        for (int i = 0; i < model.getRowCount(); i++) {
+            String existingPath = (String) model.getValueAt(i, 1); // File path is in column 1
+            if (filePath.equals(existingPath)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void handleDroppedFiles(List<File> droppedFiles) {
+        ArrayList<File> arrayList = new ArrayList<>();
+        for (File file : droppedFiles) {
+            Utils.listAllFiles(arrayList, file);
+        }
+        for (File file : arrayList) {
+            String filePath = file.getAbsolutePath();
+            if (!isFileAlreadyInTable(filePath)) {
+                ((DefaultTableModel) table.getModel()).addRow(new String[]{file.getName(), filePath, String.valueOf(file.length()), "准备转换"});
+            }
+        }
+    }
+
+    private void setupDragAndDrop() {
+        DropTarget dropTarget = new DropTarget(scrollPane, new DropTargetListener() {
+            @Override
+            public void dragEnter(DropTargetDragEvent dtde) {
+                if (dtde.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                    dtde.acceptDrag(DnDConstants.ACTION_COPY);
+                } else {
+                    dtde.rejectDrag();
+                }
+            }
+
+            @Override
+            public void dragOver(DropTargetDragEvent dtde) {
+                // 不需要特效
+            }
+
+            @Override
+            public void dropActionChanged(DropTargetDragEvent dtde) {
+                // 不需要
+            }
+
+            @Override
+            public void dragExit(DropTargetEvent dte) {
+                // 不需要特效
+            }
+
+            @Override
+            public void drop(DropTargetDropEvent dtde) {
+                try {
+                    dtde.acceptDrop(DnDConstants.ACTION_COPY);
+                    Transferable transferable = dtde.getTransferable();
+                    
+                    if (transferable.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
+                        @SuppressWarnings("unchecked")
+                        List<File> droppedFiles = (List<File>) transferable.getTransferData(DataFlavor.javaFileListFlavor);
+                        handleDroppedFiles(droppedFiles);
+                        dtde.dropComplete(true);
+                    } else {
+                        dtde.dropComplete(false);
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    dtde.dropComplete(false);
+                }
+            }
+        });
     }
 
     private void initComponents() {
@@ -197,6 +275,9 @@ public class View extends JFrame {
         table.getTableHeader().setReorderingAllowed(false);
         //window close ways
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        
+        //Setup drag and drop functionality
+        setupDragAndDrop();
     }
 
     // JFormDesigner - Variables declaration - DO NOT MODIFY  //GEN-BEGIN:variables
